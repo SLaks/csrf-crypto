@@ -35,8 +35,10 @@ Session.prototype.run = function (req) {
 	return res;
 };
 
+function getUser(req) { return req.user; }
+
 describe('#csrfCrypto', function () {
-	it('should succeed under normal circumstances', function (done) {
+	it('should succeed under normal circumstances', function () {
 		var session = new Session({ key: 'abc' });
 
 		var res = session.run({});
@@ -45,6 +47,81 @@ describe('#csrfCrypto', function () {
 		var req2 = {};
 		session.run(req2);
 		assert.ok(req2.verifyToken(formToken));
-		done();
+	});
+	it('should fail if cookie is removed', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({});
+		var formToken = res.getFormToken();
+
+		delete session.cookies._csrfKey;
+
+		var req2 = {};
+		session.run(req2);
+		assert.ok(!req2.verifyToken(formToken));
+	});
+
+	it('should succeed if cookie is copied across instances', function () {
+		var session1 = new Session({ key: 'abc' });
+
+		var res = session1.run({});
+		var formToken = res.getFormToken();
+
+		var session2 = new Session({ key: 'abc' });
+		session2.cookies._csrfKey = session1.cookies._csrfKey;
+
+		var req2 = {};
+		session2.run(req2);
+		assert.ok(req2.verifyToken(formToken));
+	});
+
+	it('should fail if cookie is copied across instances with different keys', function () {
+		var session1 = new Session({ key: 'abc' });
+
+		var res = session1.run({});
+		var formToken = res.getFormToken();
+
+		var session2 = new Session({ key: 'def' });
+		session2.cookies._csrfKey = session1.cookies._csrfKey;
+
+		var req2 = {};
+		session2.run(req2);
+		assert.ok(!req2.verifyToken(formToken));
+	});
+
+	it('should work with users', function () {
+		var session = new Session({ key: 'abc', userData: getUser });
+
+		var res = session.run({ user: "2|SLaks" });
+		var formToken = res.getFormToken();
+
+		var req2 = { user: "2|SLaks" };
+		session.run(req2);
+		assert.ok(req2.verifyToken(formToken));
+	});
+
+	it('should fail with different users', function () {
+		var session = new Session({ key: 'abc', userData: getUser });
+
+		var res = session.run({ user: "1|izs" });
+		var formToken = res.getFormToken();
+
+		var req2 = { user: "2|SLaks" };
+		session.run(req2);
+		assert.ok(!req2.verifyToken(formToken));
+	});
+
+	it('should fail if cookie is copied across instances with & without users', function () {
+		var session1 = new Session({ key: 'abc', userData: getUser });
+
+		var res = session1.run({ user: "SLaks" });
+		var formToken = res.getFormToken();
+
+		var session2 = new Session({ key: 'abc' });
+		session2.cookies._csrfKey = session1.cookies._csrfKey;
+
+		var req2 = {};
+		session2.run(req2);
+		assert.ok(!req2.verifyToken(formToken));
 	});
 });
