@@ -38,7 +38,10 @@ module.exports = function csrfCrypto(options) {
 	var cookieKey = crypto.createHmac(options.algorithm, options.key).update(cookieKeyKey).digest();
 	var formKey = crypto.createHmac(options.algorithm, options.key).update(formKeyKey).digest();
 
-	//TODO: options.secure
+	function checkSecure(req) {
+		if (options.secure && !req.connection.encrypted)
+			throw new Error("csrf-crypto has been configured to require SSL; cannot call CSRF functions in non-HTTPS request");
+	}
 
 	// The cookie has three parts:
 	// Random salt, userData (if any), and a hash of the previous two.
@@ -98,6 +101,7 @@ module.exports = function csrfCrypto(options) {
 	 */
 	function getFormToken() {
 		/*jshint validthis:true */
+		checkSecure(this.req);
 
 		var cookieToken = getCookieToken(this) || createCookie(this);
 		var salt = base64Random(saltSize);
@@ -118,6 +122,7 @@ module.exports = function csrfCrypto(options) {
 	 */
 	function verifyFormToken(formToken) {
 		/*jshint validthis:true */
+		checkSecure(this);
 
 		this.csrfChecked = true;
 		if (!formToken) return false;
