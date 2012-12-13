@@ -5,10 +5,11 @@
   "homepage": "https://github.com/SLaks/csrf-crypto",
   "author": "Schabse Laks <Dev@SLaks.net> (http://slaks.net)",
   "keywords": [
-    "q",
-    "promises",
-    "linq",
-    "arrays"
+    "csrf",
+    "web",
+    "crypto",
+    "connect",
+    "middleware"
   ],
   "main": "csrf-crypto.js",
   "repository": {
