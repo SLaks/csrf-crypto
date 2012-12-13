@@ -44,7 +44,7 @@ module.exports = function csrfCrypto(options) {
 	var formKey = crypto.createHmac(options.algorithm, options.key).update(formKeyKey).digest();
 
 	function checkSecure(req) {
-		if (options.secure && !req.connection.encrypted)
+		if (options.secure && !req.secure)
 			throw new Error("csrf-crypto has been configured to require SSL; cannot call CSRF functions in non-HTTPS request");
 	}
 

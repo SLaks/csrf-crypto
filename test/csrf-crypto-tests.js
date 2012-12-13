@@ -14,7 +14,6 @@ function Session(csrfOptions) {
 Session.prototype.run = function (req) {
 	//Mock as much of the response object as I need
 
-	req.connection = req.connection || {};
 	req.body = req.body || {};
 	req.query = req.query || {};
 	req.headers = req.headers || {};
@@ -156,7 +155,7 @@ describe('#csrfCrypto', function () {
 	it('should set secure cookies if requested', function () {
 		var session = new Session({ key: 'abc', secure: true });
 
-		var res = session.run({ connection: { encrypted: true } });
+		var res = session.run({ secure: true });
 		var formToken = res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.secure, true, "Token Cookie should be secure");
 	});
@@ -287,7 +286,7 @@ describe('#csrfCrypto.guard', function () {
 	it('should do nothing if CSRF was allowed', function () {
 		var session = new Session({ key: 'abc' });
 
-		var req = { method: 'POST' }
+		var req = { method: 'POST' };
 		var res = session.run(req);
 		req.allowCsrf();
 		runGuard(res);
