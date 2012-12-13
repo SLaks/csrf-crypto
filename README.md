@@ -1,13 +1,71 @@
 #csrf-crypto
 
-csrf-crypto implements CSRF protection without using server-side session.
+csrf-crypto implements CSRF protection without using server-side session, just like ASP.Net's [AntiForgery class](http://msdn.microsoft.com/en-us/library/system.web.helpers.antiforgery.aspx).
 
 As such, it can be used in web farm scenarios without requiring that each user stick to one machine or that the machines can communicate with eachother.  
 It still prevents attackers from generating valid form tokens even if they can read the victim's cookies.
 
 To do this, it utilizes a secret key that is shared by all of the servers.
 
-Unlike the connect's built-in csrf module, you must verify the tokens in csrf-crypto explicitly in each POST request.
+##Replacing Connect's CSRF
+**Unlike the connect's built-in csrf module, you must verify the tokens in csrf-crypto explicitly in each POST request.**  
+Alternatively, you can use the optional csrfCrypto.enforcer() middleware to make it behave exactly like `csrf`:
+
+```js
+expressApp.use(csrfCrypto({ key: secret }));
+expressApp.use(csrfCrypto.enforcer());
+```
+
+You will still need to replace `req.session._csrf` with `res.getFormToken()`.
+
+#Usage
+
+First, install the middleware:
+
+```js
+expressApp.use(csrfCrypto({ key: secret }));
+```
+
+When returning a `<form>`, get a form token for the response:
+
+```js
+var formToken = res.getFormToken();
+```
+```html
+<input type="hidden" name="_csrf" value="{{formToken}}" />
+```
+
+Finally, in the POST handler, verify the token for the request:
+```js
+if (!req.verifyToken(req.body._csrf)) {
+	// No! Bad boy!
+}
+```
+
+#Helper Middleware
+
+If you don't want to manually verify the token in every POST, you have two options:
+
+###`csrfCrypto.enforcer()`
+This middleware will verify the CSRF token for all incoming POST (or PUT, or anything except GET, HEAD, and OPTIONS) requests, just like the standard [csrf middleware](http://www.senchalabs.org/connect/csrf.html).  Like the standard middleware, it will look for the form token in a `_csrf` field in the body or querystring, or in the `X-CSRF-Token` header field.  If the token is missing or invalid, it will send an HTTP 403 error.
+
+An earlier middleware can call `req.allowCsrf();` to suppress the verification.
+
+This middleware must be included after csrfCrypto itself, but before any middleware that needs to be protected against CSRF attacks:
+```js
+expressApp.use(csrfCrypto({ key: secret }));
+expressApp.use(csrfCrypto.enforcer());
+```
+
+###`csrfCrypto.guard()`
+This middleware will make sure that you don't forget to verify any non-GET (nor HEAD, nor OPTIONS) requests against CSRF.
+
+If neither `req.verifyToken()` nor `req.allowCsrf()` has been called on such a request, `res.end()` will throw an exception.
+
+This middleware does not verify that the result of `req.verifyToken()` has been acted upon.
+
+This middleware takes no options and must be included before any middleware that might end the request.  (it does not need to be after csrfCrypto)
+
 
 #Options
 The csrfCrypto middleware function takes an options hash with the following options.  

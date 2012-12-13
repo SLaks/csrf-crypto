@@ -126,11 +126,14 @@ module.exports = function csrfCrypto(options) {
 	 * Verifies a form token submitted with the current request.
 	 * This function must be called on the request object.
 	 * 
-	 * @returns {Boolean} True if the form token matches the cookie in the request..
+	 * @returns {Boolean} True if the form token matches the cookie in the request.
 	 */
 	function verifyFormToken(formToken) {
 		/*jshint validthis:true */
 		checkSecure(this);
+
+		if (this._csrfValid)
+			return true;
 
 		this._csrfChecked = true;
 		if (!formToken) return false;
@@ -157,6 +160,8 @@ module.exports = function csrfCrypto(options) {
 		// instead of generating a new one. (saves crypto ops)
 		if (!this.res._csrfFormToken)
 			this.res._csrfFormToken = formToken;
+
+		this._csrfValid = true;
 		return true;
 	}
 
@@ -170,4 +175,48 @@ module.exports = function csrfCrypto(options) {
 	};
 };
 
-//TODO: csrf.enforcer, csrf.autoChecker
+function error(code, msg) {
+	var err = new Error(msg || require('http').STATUS_CODES[code]);
+	err.status = code;
+	return err;
+}
+
+
+function getFormToken(req) {
+	// Copied from connect/csrf
+	return (req.body && req.body._csrf)
+		|| (req.query && req.query._csrf)
+		|| (req.headers['x-csrf-token']);
+}
+var skipMethods = { GET: true, HEAD: true, OPTIONS: true };
+
+function enforcerMiddleware(req, res, next) {
+	if (!req.verifyToken)
+		throw new Error("csrfCrypto.enforcer() must be use()d after csrfCrypto()");
+
+	if (skipMethods.hasOwnProperty(req.method)) return next();
+
+	// If an earlier middleware calls req.allowCsrf(), don't verify
+	if (req._csrfAllowed) return next();
+
+	if (!req.verifyToken(getFormToken(req)))
+		return next(error(403));
+
+	next();
+}
+module.exports.enforcer = function () { return enforcerMiddleware; };
+
+
+function guardMiddleware(req, res, next) {
+	var end = res.end;
+	res.end = function (data, encoding) {
+		if (!skipMethods.hasOwnProperty(req.method)
+		&& !(req._csrfAllowed || req._csrfChecked))
+			throw new Error(req.method + " request finished without CSRF verification");
+
+		res.end = end;
+		res.end(data, encoding);
+	};
+	next();
+}
+module.exports.guard = function () { return guardMiddleware; };

@@ -15,6 +15,9 @@ Session.prototype.run = function (req) {
 	//Mock as much of the response object as I need
 
 	req.connection = req.connection || {};
+	req.body = req.body || {};
+	req.query = req.query || {};
+	req.headers = req.headers || {};
 	req.cookies = this.cookies;
 
 	var res = req.res = req.res || {};
@@ -29,6 +32,7 @@ Session.prototype.run = function (req) {
 	res.clearCookie = function (name, options) {
 		delete req.cookies[name];
 	};
+	res.end = function () { };
 
 	this.middleware(req, res, function () { });
 
@@ -181,5 +185,136 @@ describe('#csrfCrypto', function () {
 		assert.throws(function () {
 			req2.verifyToken(formToken);
 		}, /HTTPS/i, "Didn't reject insecure token use");
+	});
+});
+
+describe('#csrfCrypto.enforcer', function () {
+	function runEnforcer(res) {
+		var retVal;
+		csrfCrypto.enforcer()(res.req, res, function (arg) { retVal = arg; });
+		return retVal;
+	}
+
+	it('should do nothing on GET requests', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({ method: 'GET' });
+		var result = runEnforcer(res);
+		assert.strictEqual(result, undefined);
+	});
+	it('should fail on tokenless POSTS', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({ method: 'POST' });
+		var result = runEnforcer(res);
+		assert.ok(result instanceof Error);
+		assert.strictEqual(result.status, 403);
+	});
+	it('should fail on stolen tokens', function () {
+		var session1 = new Session({ key: 'abc' });
+
+		var res = session1.run({});
+		var formToken = res.getFormToken();
+
+		var session2 = new Session({ key: 'def' });
+		session2.cookies._csrfKey = session1.cookies._csrfKey;
+
+		var res2 = session2.run({ method: 'POST', body: { _csrf: formToken } });
+		var result = runEnforcer(res2);
+		assert.ok(result instanceof Error);
+		assert.strictEqual(result.status, 403);
+	});
+
+	it('should accept form token in querystring', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res1 = session.run({ method: 'GET' });
+		var formToken = res1.getFormToken();
+
+		var res2 = session.run({ method: 'POST', query: { _csrf: formToken } });
+		var result = runEnforcer(res2);
+		assert.strictEqual(result, undefined);
+	});
+	it('should accept form token in post', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res1 = session.run({ method: 'GET' });
+		var formToken = res1.getFormToken();
+
+		var res2 = session.run({ method: 'POST', body: { _csrf: formToken } });
+		var result = runEnforcer(res2);
+		assert.strictEqual(result, undefined);
+	});
+	it('should accept form token in header', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res1 = session.run({ method: 'GET' });
+		var formToken = res1.getFormToken();
+
+		var res2 = session.run({ method: 'POST', headers: { "x-csrf-token": formToken } });
+		var result = runEnforcer(res2);
+		assert.strictEqual(result, undefined);
+	});
+	it('should do nothing if allowCSRF is called', function () {
+		var session = new Session({ key: 'abc' });
+
+		var req = { method: 'POST' };
+		var res = session.run(req);
+		req.allowCsrf();
+		var result = runEnforcer(res);
+		assert.strictEqual(result, undefined);
+	});
+});
+describe('#csrfCrypto.guard', function () {
+	function runGuard(res) {
+		var retVal;
+		csrfCrypto.guard()(res.req, res, function () { });
+		res.end();
+	}
+
+	it('should do nothing on GET requests', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({ method: 'GET' });
+		runGuard(res);
+	});
+	it('should fail on non-validated POST request', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({ method: 'POST' });
+		assert.throws(function () { runGuard(res); });
+	});
+	it('should do nothing if CSRF was allowed', function () {
+		var session = new Session({ key: 'abc' });
+
+		var req = { method: 'POST' }
+		var res = session.run(req);
+		req.allowCsrf();
+		runGuard(res);
+	});
+	it('should do nothing if token was validated', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res1 = session.run({});
+		var formToken = res1.getFormToken();
+
+		var req2 = { method: "POST" };
+		var res2 = session.run(req2);
+		req2.verifyToken(formToken);
+		runGuard(res2);
+	});
+	it('should do nothing if invalid token was validated', function () {
+		var session1 = new Session({ key: 'abc' });
+
+		var res1 = session1.run({});
+		var formToken = res1.getFormToken();
+
+		var session2 = new Session({ key: 'def' });
+		session2.cookies._csrfKey = session1.cookies._csrfKey;
+
+		var req2 = { method: "POST" };
+		var res2 = session2.run(req2);
+		req2.verifyToken(formToken);
+		runGuard(res2);
 	});
 });
