@@ -17,6 +17,11 @@ function base64Random(numBytes) {
 	return new Buffer(bytes, 'binary').toString('base64');
 }
 
+function allowCsrf() {
+	/*jshint validthis:true */
+	this._csrfAllowed = true;
+}
+
 module.exports = function csrfCrypto(options) {
 	if (!options || !options.key)
 		throw new Error("csrf-crypto requires a key");
@@ -124,7 +129,7 @@ module.exports = function csrfCrypto(options) {
 		/*jshint validthis:true */
 		checkSecure(this);
 
-		this.csrfChecked = true;
+		this._csrfChecked = true;
 		if (!formToken) return false;
 
 		var cookieToken = getCookieToken(this.res);
@@ -147,6 +152,7 @@ module.exports = function csrfCrypto(options) {
 	return function (req, res, next) {
 		res.getFormToken = getFormToken;
 
+		req.allowCsrf = allowCsrf;
 		req.verifyToken = verifyFormToken;
 
 		next();
