@@ -7,9 +7,6 @@ var assert = require("assert");
 
 var csrfCrypto = require('..');
 
-
-//TODO: Test userData() with "|"
-
 function Session(csrfOptions) {
 	this.middleware = csrfCrypto(csrfOptions);
 	this.cookies = {};
@@ -17,13 +14,16 @@ function Session(csrfOptions) {
 Session.prototype.run = function (req) {
 	//Mock as much of the response object as I need
 
+	req.connection = req.connection || {};
 	req.cookies = this.cookies;
 
 	var res = req.res = req.res || {};
 	res.req = req;
 	res.cookies = res.cookies || {};
+	res.cookieOptions = res.cookieOptions || {};
 	res.cookie = res.cookie || function (name, value, options) {
 		this.cookies[name] = value;
+		this.cookieOptions[name] = options || {};
 		req.cookies[name] = value;
 	};
 	res.clearCookie = function (name, options) {
@@ -43,6 +43,7 @@ describe('#csrfCrypto', function () {
 
 		var res = session.run({});
 		var formToken = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.httpOnly, true, "Token cookie should be HttpOnly");
 
 		var req2 = {};
 		session.run(req2);
@@ -123,5 +124,39 @@ describe('#csrfCrypto', function () {
 		var req2 = {};
 		session2.run(req2);
 		assert.ok(!req2.verifyToken(formToken));
+	});
+
+	it('should set secure cookies if requested', function () {
+		var session = new Session({ key: 'abc', secure: true });
+
+		var res = session.run({ connection: { encrypted: true } });
+		var formToken = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.secure, true, "Token Cookie should be secure");
+	});
+
+	it('should throw when getting token for HTTP if secure set', function () {
+		var session = new Session({ key: 'abc', secure: true });
+
+		var res = session.run({});
+		assert.throws(function () {
+			res.getFormToken();
+		}, /HTTPS/i, "Didn't reject insecure token use");
+	});
+
+	it('should throw when verifying token for HTTP if secure set', function () {
+		var session1 = new Session({ key: 'abc' });
+
+		var res1 = session1.run({});
+		var formToken = res1.getFormToken();
+
+		var session2 = new Session({ key: 'abc', secure: true });
+		session2.cookies._csrfKey = session1.cookies._csrfKey;
+
+		var req2 = {};
+		var res2 = session2.run(req2);
+
+		assert.throws(function () {
+			req2.verifyToken(formToken);
+		}, /HTTPS/i, "Didn't reject insecure token use");
 	});
 });
