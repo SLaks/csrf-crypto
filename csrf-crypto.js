@@ -106,6 +106,8 @@ module.exports = function csrfCrypto(options) {
 	 */
 	function getFormToken() {
 		/*jshint validthis:true */
+		if (this._csrfFormToken)
+			return this._csrfFormToken;
 		checkSecure(this.req);
 
 		var cookieToken = getCookieToken(this) || createCookie(this);
@@ -116,7 +118,8 @@ module.exports = function csrfCrypto(options) {
 		hasher.update("|");
 		hasher.update(salt);
 
-		return salt + "|" + hasher.digest('base64');
+		this._csrfFormToken = salt + "|" + hasher.digest('base64');
+		return this._csrfFormToken;
 	}
 
 	/**
@@ -146,7 +149,15 @@ module.exports = function csrfCrypto(options) {
 		hasher.update("|");	// Don't confuse longer or shorter tokens
 		hasher.update(parts[0]);
 
-		return parts[1] === hasher.digest('base64');
+		// If the hash doesn't match, reject the token
+		if (parts[1] !== hasher.digest('base64'))
+			return false;
+
+		// If we have a valid token, reuse it for this request
+		// instead of generating a new one. (saves crypto ops)
+		if (!this.res._csrfFormToken)
+			this.res._csrfFormToken = formToken;
+		return true;
 	}
 
 	return function (req, res, next) {

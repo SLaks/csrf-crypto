@@ -49,6 +49,29 @@ describe('#csrfCrypto', function () {
 		session.run(req2);
 		assert.ok(req2.verifyToken(formToken));
 	});
+	it('should reuse form tokens for the same request', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({});
+		var formToken1 = res.getFormToken();
+		var formToken2 = res.getFormToken();
+
+		assert.strictEqual(formToken1, formToken2);
+	});
+	it('should reuse already-validated form tokens', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({});
+		var formToken1 = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.httpOnly, true, "Token cookie should be HttpOnly");
+
+		var req2 = {};
+		var res2 = session.run(req2);
+		assert.ok(req2.verifyToken(formToken1));
+
+		var formToken2 = res2.getFormToken();
+		assert.strictEqual(formToken2, formToken1);
+	});
 	it('should fail if cookie is removed', function () {
 		var session = new Session({ key: 'abc' });
 
