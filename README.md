@@ -43,7 +43,7 @@ if (!req.verifyToken(req.body._csrf)) {
 ```
 
 To force the cookie to be regenerated, call `res.resetCsrf()` before calling `getFormToken()`.  This method will remove the current cookie and clear any cached validity information.  
-This method should be called in conjuction wit hthe `userData()` option to regenerate the cookie of the user changes (eg, after logging in).
+This method should be called in conjunction with the `userData()` option to regenerate the cookie of the user changes (eg, after logging in).
 
 #Helper Middleware
 
