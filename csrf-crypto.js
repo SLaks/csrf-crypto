@@ -108,7 +108,6 @@ module.exports = function csrfCrypto(options) {
 		/*jshint validthis:true */
 		this.clearCookie(options.cookieName);
 		delete this._csrfFormToken;
-		delete this.req._csrfValid;
 	}
 	/**
 	 * Gets a new form token for the current response.
@@ -144,7 +143,10 @@ module.exports = function csrfCrypto(options) {
 		/*jshint validthis:true */
 		checkSecure(this);
 
-		if (this._csrfValid)
+		// If we already cached this token, we know that it's valid.
+		// If we validate two different tokens for the same request,
+		// this won't incorrectly skip the second one.
+		if (this.res._csrfFormToken && this.res._csrfFormToken === formToken)
 			return true;
 
 		this._csrfChecked = true;
@@ -173,7 +175,6 @@ module.exports = function csrfCrypto(options) {
 		if (!this.res._csrfFormToken)
 			this.res._csrfFormToken = formToken;
 
-		this._csrfValid = true;
 		return true;
 	}
 

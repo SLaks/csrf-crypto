@@ -52,6 +52,28 @@ describe('#csrfCrypto', function () {
 		session.run(req2);
 		assert.ok(req2.verifyToken(formToken));
 	});
+	it('should reject empty tokens', function () {
+		var session = new Session({ key: 'abc' });
+
+		var req = {};
+		session.run(req);
+		assert.ok(!req.verifyToken());
+		assert.ok(!req.verifyToken(""));
+		assert.ok(!req.verifyToken(null));
+	});
+	it('should correctly validate multiple tokens for the same request', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({});
+		var formToken = res.getFormToken();
+
+		var req2 = {};
+		session.run(req2);
+		assert.ok(req2.verifyToken(formToken));
+		assert.ok(req2.verifyToken(formToken));
+		assert.ok(!req2.verifyToken("Fake token"));
+		assert.ok(req2.verifyToken(formToken));
+	});
 	it('should reuse form tokens for the same request', function () {
 		var session = new Session({ key: 'abc' });
 
