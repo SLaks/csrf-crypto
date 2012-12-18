@@ -1,4 +1,4 @@
-﻿/*jshint node: true, camelcase: true, eqeqeq: true, forin: true, immed: true, latedef: true, newcap: true, noarg: true, undef: true, globalstrict: true*/
+﻿/*jshint node: true, camelcase: true, eqeqeq: true, forin: true, immed: true, latedef: true, newcap: true, noarg: true, undef: true, globalstrict: true, laxbreak: true*/
 "use strict";
 var crypto = require('crypto');
 
