@@ -36,7 +36,7 @@ module.exports = function csrfCrypto(options) {
 		// Since we use '|' to split parts, make sure that the userData
 		// does not contain that character.
 		getUserData = function (req) {
-			return options.userData(req).replace('|', '^');
+			return String(options.userData(req)).replace('|', '^');
 		};
 	}
 
@@ -98,6 +98,18 @@ module.exports = function csrfCrypto(options) {
 		return parts[0];
 	}
 
+	/**
+	 * Clears the CSRF cookie token and removes any cached data.
+	 * This function must be called on the response object.
+	 * 
+	 * @returns {String} An opaque token to include with new requests.
+	 */
+	function resetCsrf() {
+		/*jshint validthis:true */
+		this.clearCookie(options.cookieName);
+		delete this._csrfFormToken;
+		delete this.req._csrfValid;
+	}
 	/**
 	 * Gets a new form token for the current response.
 	 * This function must be called on the response object.
@@ -167,6 +179,7 @@ module.exports = function csrfCrypto(options) {
 
 	return function (req, res, next) {
 		res.getFormToken = getFormToken;
+		res.resetCsrf = resetCsrf;
 
 		req.allowCsrf = allowCsrf;
 		req.verifyToken = verifyFormToken;

@@ -42,6 +42,9 @@ if (!req.verifyToken(req.body._csrf)) {
 }
 ```
 
+To force the cookie to be regenerated, call `res.resetCsrf()` before calling `getFormToken()`.  This method will remove the current cookie and clear any cached validity information.  
+This method should be called in conjuction wit hthe `userData()` option to regenerate the cookie of the user changes (eg, after logging in).
+
 #Helper Middleware
 
 If you don't want to manually verify the token in every POST, you have two options:
@@ -75,7 +78,7 @@ All options except `key` are optional.
  - `algorithm`: The HMAC hash algorithm to use.  Must be supported by `crypto.createHmac()`.  Defaults to `sha512`.
  - `cookieName`: The name of the cookie to store the cookie token in  Defaults to `_csrfKey`.
  - `secure`: True to require HTTPS everywhere (setting the Secure flag on the cookie to prevent insecure transmission).  Defaults to false.  If true, calling CSRF functions in a non-HTTPS request will throw an exception.
- - `userData`: A function that returns data unique to the current user, to be included in the cookie token.  This prevents users from using other users' token pairs.  The return value of this function is inserted as plain text into the cookie; it must return printable ASCII characters and should not return confidential information.  The function is passed the connect `req` object.
+ - `userData`: A `function(req)` that returns a string unique to the current user, to be included in the cookie token.  This prevents users from using other users' token pairs.  The return value of this function is inserted as plain text into the cookie; it must return printable ASCII characters and should not return confidential information.  The function is passed the connect `req` object.
 
 #Security Guarantees
 As long as the server-side key is kept secret, an attacker will not be able to derive a valid form token from an existing cookie token.

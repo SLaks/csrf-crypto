@@ -119,8 +119,8 @@ describe('#csrfCrypto', function () {
 	it('should work with users', function () {
 		var session = new Session({ key: 'abc', userData: getUser });
 
-		var res = session.run({ user: "2|SLaks" });
-		var formToken = res.getFormToken();
+		var res1 = session.run({ user: "2|SLaks" });
+		var formToken = res1.getFormToken();
 
 		var req2 = { user: "2|SLaks" };
 		session.run(req2);
@@ -137,6 +137,27 @@ describe('#csrfCrypto', function () {
 		session.run(req2);
 		assert.ok(!req2.verifyToken(formToken));
 	});
+
+	it('should work across user change if resetCsrf() is called', function () {
+		var session = new Session({ key: 'abc', userData: getUser });
+
+		var res1 = session.run({});
+		var formToken = res1.getFormToken();
+
+		var req2 = {};
+		var res2 = session.run(req2);
+		assert.ok(req2.verifyToken(formToken));
+
+		req2.user = "2|SLaks";	// User logged in; needs different token
+		res2.resetCsrf();
+
+		formToken = res2.getFormToken();
+
+		var req3 = { user: "2|SLaks" };
+		session.run(req3);
+		assert.ok(req3.verifyToken(formToken));
+	});
+
 
 	it('should fail if cookie is copied across instances with & without users', function () {
 		var session1 = new Session({ key: 'abc', userData: getUser });
