@@ -1,6 +1,6 @@
 {
   "name": "csrf-crypto",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Connect middleware for session-less CSRF protection using cryptography.",
   "homepage": "https://github.com/SLaks/csrf-crypto",
   "author": "Schabse Laks <Dev@SLaks.net> (http://slaks.net)",
