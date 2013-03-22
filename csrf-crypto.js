@@ -80,7 +80,7 @@ module.exports = function csrfCrypto(options) {
 	}
 
 	// Private function that finds an existing cookie token and returns its salt value
-	function getCookieToken(res, createIfMissing) {
+	function getCookieToken(res) {
 		if (!res.req.cookies[options.cookieName])
 			return false;
 
