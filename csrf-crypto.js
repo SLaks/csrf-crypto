@@ -67,7 +67,12 @@ module.exports = function csrfCrypto(options) {
 		var hash = hasher.digest('base64');
 
 		var cookie = salt + "|" + userData + "|" + hash;
-		res.cookie(options.cookieName, cookie, { httpOnly: true, secure: options.secure });
+		res.cookie(options.cookieName, cookie, {
+			httpOnly: true,
+			secure: options.secure,
+			domain: options.domain
+				|| ((options.allowSubdomains && req.host !== 'localhost') && '.' + res.req.host)	// Browsers don't like .localhost
+		});
 		return salt;
 	}
 
