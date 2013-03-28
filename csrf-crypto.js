@@ -71,7 +71,7 @@ module.exports = function csrfCrypto(options) {
 			httpOnly: true,
 			secure: options.secure,
 			domain: options.domain
-				|| ((options.allowSubdomains && req.host !== 'localhost') && '.' + res.req.host)	// Browsers don't like .localhost
+				|| ((options.allowSubdomains && res.req.host !== 'localhost') && '.' + res.req.host)	// Browsers don't like .localhost
 		});
 		return salt;
 	}
