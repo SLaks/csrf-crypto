@@ -40,6 +40,10 @@ module.exports = function csrfCrypto(options) {
 		};
 	}
 
+	function cookieDomain(req) {
+		return options.domain
+			|| ((options.allowSubdomains && req.host !== 'localhost') && '.' + req.host);	// Browsers don't like .localhost
+	}
 	var cookieKey = crypto.createHmac(options.algorithm, options.key).update(cookieKeyKey).digest();
 	var formKey = crypto.createHmac(options.algorithm, options.key).update(formKeyKey).digest();
 
@@ -70,8 +74,7 @@ module.exports = function csrfCrypto(options) {
 		res.cookie(options.cookieName, cookie, {
 			httpOnly: true,
 			secure: options.secure,
-			domain: options.domain
-				|| ((options.allowSubdomains && res.req.host !== 'localhost') && '.' + res.req.host)	// Browsers don't like .localhost
+			domain: cookieDomain(res.req)
 		});
 		return salt;
 	}
@@ -111,7 +114,7 @@ module.exports = function csrfCrypto(options) {
 	 */
 	function resetCsrf() {
 		/*jshint validthis:true */
-		this.clearCookie(options.cookieName);
+		this.clearCookie(options.cookieName, { domain: cookieDomain(this.req) });
 		delete this._csrfFormToken;
 	}
 	/**
