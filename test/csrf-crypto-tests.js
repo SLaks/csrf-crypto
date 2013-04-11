@@ -200,7 +200,7 @@ describe('#csrfCrypto', function () {
 
 		var res = session.run({ secure: true });
 		var formToken = res.getFormToken();
-		assert.strictEqual(res.cookieOptions._csrfKey.secure, true, "Token Cookie should be secure");
+		assert.strictEqual(res.cookieOptions._csrfKey.secure, true, "Token cookie should be secure");
 	});
 
 	it('should throw when getting token for HTTP if secure set', function () {
@@ -227,6 +227,49 @@ describe('#csrfCrypto', function () {
 		assert.throws(function () {
 			req2.verifyToken(formToken);
 		}, /HTTPS/i, "Didn't reject insecure token use");
+	});
+
+	it('should call domain function', function () {
+		var session = new Session({ key: 'abc', domain: function (req) { return '.' + req.session.area + '.example.com'; } });
+
+		var res = session.run({ session: { area: 'corp' } });
+		var formToken = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.domain, ".corp.example.com");
+	});
+	it('should use domain string', function () {
+		var session = new Session({ key: 'abc', domain: '.example.com' });
+
+		var res = session.run({});
+		var formToken = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.domain, ".example.com");
+	});
+	it('should ignore allowSubdomains if domain is set', function () {
+		var session = new Session({ key: 'abc', domain: 'example.com', allowSubdomains: true });
+
+		var res = session.run({ host: 'a.example.com' });
+		var formToken = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.domain, "example.com");
+	});
+	it('should handle allowSubdomains', function () {
+		var session = new Session({ key: 'abc', allowSubdomains: true });
+
+		var res = session.run({ host: 'a.example.com' });
+		var formToken = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.domain, ".a.example.com");
+	});
+	it('should ignore allowSubdomains for localhost', function () {
+		var session = new Session({ key: 'abc', allowSubdomains: true });
+
+		var res = session.run({ host: 'localhost' });
+		var formToken = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.domain, void 0);
+	});
+	it('should use default to no domain', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({});
+		var formToken = res.getFormToken();
+		assert.strictEqual(res.cookieOptions._csrfKey.domain, void 0);
 	});
 });
 

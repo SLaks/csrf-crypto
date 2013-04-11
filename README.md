@@ -79,7 +79,7 @@ All options except `key` are optional.
  - `cookieName`: The name of the cookie to store the cookie token in  Defaults to `_csrfKey`.
  - `secure`: True to require HTTPS everywhere (setting the Secure flag on the cookie to prevent insecure transmission).  Defaults to false.  If true, calling CSRF functions in a non-HTTPS request will throw an exception.
  - `userData`: A `function(req)` that returns a string unique to the current user, to be included in the cookie token.  This prevents users from using other users' token pairs.  The return value of this function is inserted as plain text into the cookie; it must return printable ASCII characters and should not return confidential information.  The function is passed the connect `req` object.
- - `domain`: Specifies the CSRF cookies' `domain` header.
+ - `domain`: Specifies the CSRF cookies' `domain` header.  This can be a string, or a function that takes the `req` and returns a string.  If a function is specified, it will be invoked (with no `this`) whenever the CSRF cookie is created or deleted.
  - `allowSubdomains`: If true, CSRF cookies will be set on <code>.<i>example.com</i></code> (where `example.com` is the HTTP `Host` header, minus the port number), allowing them to be inherited by subdomains.  Use with caution; this allows attackers who control any subdomain of your domain name to steal users' tokens.   This option has no effect on localhost, or if `domain` is set.
 
 #Security Guarantees

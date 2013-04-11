@@ -40,10 +40,16 @@ module.exports = function csrfCrypto(options) {
 		};
 	}
 
-	function cookieDomain(req) {
-		return options.domain
-			|| ((options.allowSubdomains && req.host !== 'localhost') && '.' + req.host);	// Browsers don't like .localhost
-	}
+	var cookieDomain;
+	if (typeof options.domain === 'function')
+		cookieDomain = options.domain;
+	else if (options.domain)
+		cookieDomain = function (req) { return options.domain; };
+	else if (options.allowSubdomains)
+		cookieDomain = function (req) { return req.host === 'localhost' ? void 0 : '.' + req.host; };	// Browsers don't like .localhost
+	else
+		cookieDomain = function (req) { };
+
 	var cookieKey = crypto.createHmac(options.algorithm, options.key).update(cookieKeyKey).digest();
 	var formKey = crypto.createHmac(options.algorithm, options.key).update(formKeyKey).digest();
 
