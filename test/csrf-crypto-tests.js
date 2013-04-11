@@ -271,6 +271,56 @@ describe('#csrfCrypto', function () {
 		var formToken = res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.domain, void 0);
 	});
+
+	it('should call cookieName function', function () {
+		var session = new Session({ key: 'abc', cookieName: function (req) { return '_csrfKey.' + req.something; } });
+
+		var res = session.run({ something: 'example.com' });
+		var formToken = res.getFormToken();
+
+		assert.strictEqual(res.cookies._csrfKey, void 0, "cookieName should not create _csrfKey cookie");
+		assert.strictEqual(res.cookieOptions['_csrfKey.example.com'].httpOnly, true, "Token cookie should be created with correct name");
+
+		var req2 = { something: 'example.com' };
+		session.run(req2);
+		assert.ok(req2.verifyToken(formToken));
+	});
+	it('should call cookieName function and ignore other names', function () {
+		var session = new Session({ key: 'abc', cookieName: function (req) { return '_csrfKey.' + req.something; } });
+
+		var res = session.run({ something: 'example.com' });
+		var formToken = res.getFormToken();
+
+		var req2 = { something: 'else.com' };
+		session.run(req2);
+		assert.ok(!req2.verifyToken(formToken), "Request with different key should be rejected");
+	});
+	it('should call cookieName function when clearing cookie', function () {
+		var session = new Session({ key: 'abc', cookieName: function (req) { return '_csrfKey.' + req.something; } });
+
+		var res = session.run({ something: 'example.com' });
+		var formToken = res.getFormToken();
+		assert.ok(session.cookies['_csrfKey.example.com'].length > 0, "Cookie should be created in session");
+		res.resetCsrf();
+		assert.strictEqual(session.cookies['_csrfKey.example.com'], void 0);
+
+		var req2 = { something: 'example.com' };
+		session.run(req2);
+		assert.ok(!req2.verifyToken(formToken), "Cookie should be gone");
+	});
+	it('should use cookieName string', function () {
+		var session = new Session({ key: 'abc', cookieName: '_myCsrf' });
+
+		var res = session.run({ something: 'example.com' });
+		var formToken = res.getFormToken();
+
+		assert.strictEqual(res.cookies._csrfKey, void 0, "cookieName should not create _csrfKey cookie");
+		assert.strictEqual(res.cookieOptions._myCsrf.httpOnly, true, "Token cookie should be created with correct name");
+
+		var req2 = { something: 'example.com' };
+		session.run(req2);
+		assert.ok(req2.verifyToken(formToken));
+	});
 });
 
 describe('#csrfCrypto.enforcer', function () {

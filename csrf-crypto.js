@@ -27,7 +27,14 @@ module.exports = function csrfCrypto(options) {
 		throw new Error("csrf-crypto requires a key");
 
 	options.algorithm = options.algorithm || defaultAlgorithm;
-	options.cookieName = options.cookieName || defaultCookieName;
+
+	var cookieName;
+	if (typeof options.cookieName === 'function')
+		cookieName = options.cookieName;
+	else if (options.cookieName)
+		cookieName = function (req) { return options.cookieName; };
+	else
+		cookieName = function (req) { return defaultCookieName; };
 
 	var getUserData;
 	if (!options.userData) {
@@ -77,7 +84,7 @@ module.exports = function csrfCrypto(options) {
 		var hash = hasher.digest('base64');
 
 		var cookie = salt + "|" + userData + "|" + hash;
-		res.cookie(options.cookieName, cookie, {
+		res.cookie(cookieName(res.req), cookie, {
 			httpOnly: true,
 			secure: options.secure,
 			domain: cookieDomain(res.req)
@@ -87,10 +94,11 @@ module.exports = function csrfCrypto(options) {
 
 	// Private function that finds an existing cookie token and returns its salt value
 	function getCookieToken(res) {
-		if (!res.req.cookies[options.cookieName])
+		var value = res.req.cookies[cookieName(res.req)];
+		if (!value)
 			return false;
 
-		var parts = res.req.cookies[options.cookieName].split('|');
+		var parts = value.split('|');
 
 		// If the existing cookie is invalid, reject it.
 		if (parts.length !== 3)
@@ -120,7 +128,7 @@ module.exports = function csrfCrypto(options) {
 	 */
 	function resetCsrf() {
 		/*jshint validthis:true */
-		this.clearCookie(options.cookieName, { domain: cookieDomain(this.req) });
+		this.clearCookie(cookieName(this.req), { domain: cookieDomain(this.req) });
 		delete this._csrfFormToken;
 	}
 	/**

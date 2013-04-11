@@ -76,7 +76,9 @@ All options except `key` are optional.
 
  - `key`: The HMAC key used to sign tokens.  This should be a Node.JS `Buffer` object containing at least as many bytes as your algorithm's key size, from a secure random number generator.  This key should be replaced periodically.
  - `algorithm`: The HMAC hash algorithm to use.  Must be supported by `crypto.createHmac()`.  Defaults to `sha512`.
- - `cookieName`: The name of the cookie to store the cookie token in  Defaults to `_csrfKey`.
+ - `cookieName`: The name of the cookie to store the cookie token in  Defaults to `_csrfKey`.  
+  This can also be a function, in which case it will be called with the connect `req` object as a parameter whenever creating or deleting a cookie.  
+For example, this can be used to make different groups of SSL-wildcarded subdomains share different CSRF cookies set on the parent domain.
  - `secure`: True to require HTTPS everywhere (setting the Secure flag on the cookie to prevent insecure transmission).  Defaults to false.  If true, calling CSRF functions in a non-HTTPS request will throw an exception.
  - `userData`: A `function(req)` that returns a string unique to the current user, to be included in the cookie token.  This prevents users from using other users' token pairs.  The return value of this function is inserted as plain text into the cookie; it must return printable ASCII characters and should not return confidential information.  The function is passed the connect `req` object.
  - `domain`: Specifies the CSRF cookies' `domain` header.  This can be a string, or a function that takes the `req` and returns a string.  If a function is specified, it will be invoked (with no `this`) whenever the CSRF cookie is created or deleted.
