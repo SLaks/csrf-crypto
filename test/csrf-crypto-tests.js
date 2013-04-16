@@ -419,6 +419,12 @@ describe('#csrfCrypto.guard', function () {
 		var res = session.run({ method: 'POST' });
 		assert.throws(function () { runGuard(res); });
 	});
+	it('should include URLs in error messages', function () {
+		var session = new Session({ key: 'abc' });
+
+		var res = session.run({ method: 'POST', originalUrl: "/do/something" });
+		assert.throws(function () { runGuard(res); }, /\/do\/something/);
+	});
 	it('should do nothing if CSRF was allowed', function () {
 		var session = new Session({ key: 'abc' });
 

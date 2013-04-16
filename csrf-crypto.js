@@ -62,7 +62,7 @@ module.exports = function csrfCrypto(options) {
 
 	function checkSecure(req) {
 		if (options.secure && !req.secure)
-			throw new Error("csrf-crypto has been configured to require SSL; cannot call CSRF functions in non-HTTPS request");
+			throw new Error("csrf-crypto has been configured to require SSL; cannot call CSRF functions in non-HTTPS request to " + req.originalUrl);
 	}
 
 	// The cookie has three parts:
@@ -248,7 +248,7 @@ function guardMiddleware(req, res, next) {
 	res.end = function (data, encoding) {
 		if (!skipMethods.hasOwnProperty(req.method)
 		&& !(req._csrfAllowed || req._csrfChecked))
-			throw new Error(req.method + " request finished without CSRF verification");
+			throw new Error(req.method + " request to " + req.originalUrl + " finished without CSRF verification");
 
 		res.end = end;
 		res.end(data, encoding);
