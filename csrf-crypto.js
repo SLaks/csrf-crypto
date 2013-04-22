@@ -53,7 +53,7 @@ module.exports = function csrfCrypto(options) {
 	else if (options.domain)
 		cookieDomain = function (req) { return options.domain; };
 	else if (options.allowSubdomains)
-		cookieDomain = function (req) { return req.host === 'localhost' ? void 0 : '.' + req.host; };	// Browsers don't like .localhost
+		cookieDomain = function (req) { return req.host && req.host.indexOf('.') >= 0 ? '.' + req.host : void 0; };	// For security reasons, browsers won't set wildcard cookies on top-level domains, even `localhost`
 	else
 		cookieDomain = function (req) { };
 
