@@ -1,4 +1,5 @@
 #csrf-crypto
+[![build status](https://secure.travis-ci.org/SLaks/csrf-crypto.png)](http://travis-ci.org/SLaks/csrf-crypto)
 
 csrf-crypto implements CSRF protection without using server-side session, just like ASP.Net's [AntiForgery class](http://msdn.microsoft.com/en-us/library/system.web.helpers.antiforgery.aspx).
 
