@@ -146,7 +146,7 @@ module.exports = function csrfCrypto(options) {
 		var cookieToken = getCookieToken(this) || createCookie(this);
 		var salt = base64Random(saltSize);
 
-		var hasher = crypto.createHmac(options.algorithm, cookieKey);
+		var hasher = crypto.createHmac(options.algorithm, formKey);
 		hasher.update(cookieToken);
 		hasher.update("|");
 		hasher.update(salt);
@@ -183,7 +183,7 @@ module.exports = function csrfCrypto(options) {
 		if (parts.length !== 2)
 			return false;
 
-		var hasher = crypto.createHmac(options.algorithm, cookieKey);
+		var hasher = crypto.createHmac(options.algorithm, formKey);
 		hasher.update(cookieToken);
 		hasher.update("|");	// Don't confuse longer or shorter tokens
 		hasher.update(parts[0]);

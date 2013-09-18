@@ -51,6 +51,22 @@ describe('#csrfCrypto', function () {
 		session.run(req2);
 		assert.ok(req2.verifyToken(formToken));
 	});
+	it('should reject hash from cookie token', function () {
+		var session = new Session({ key: 'abc' });
+
+		var req = {};
+		var res = session.run(req);
+
+		res.getFormToken();	// Generate a cookie
+		var cookieParts = session.cookies._csrfKey.split('|');
+
+		// This makes sure that the two tokens use different keys.
+		// Otherwise, the signature for the form token would match
+		// the signature of the cookie token if the form's salt is
+		// equal to the userData.
+		assert.ok(!req.verifyToken("|" + cookieParts[2]));
+	});
+
 	it('should reject empty tokens', function () {
 		var session = new Session({ key: 'abc' });
 
