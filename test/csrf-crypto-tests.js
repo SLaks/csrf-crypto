@@ -1,8 +1,7 @@
-﻿/*jshint node: true, camelcase: true, eqeqeq: true, forin: true, immed: true, latedef: true, newcap: true, noarg: true, undef: true, globalstrict: true*/
-/*global describe:false, it:false */
+﻿/*global describe, it*/
 "use strict";
 
-var mocha = require("mocha");
+require("mocha");
 var assert = require("assert");
 
 var csrfCrypto = require('..');
@@ -28,7 +27,7 @@ Session.prototype.run = function (req) {
 		this.cookieOptions[name] = options || {};
 		req.cookies[name] = value;
 	};
-	res.clearCookie = function (name, options) {
+	res.clearCookie = function (name) {
 		delete req.cookies[name];
 	};
 	res.end = function () { };
@@ -61,6 +60,7 @@ describe('#csrfCrypto', function () {
 		assert.ok(!req.verifyToken(""));
 		assert.ok(!req.verifyToken(null));
 	});
+
 	it('should correctly validate multiple tokens for the same request', function () {
 		var session = new Session({ key: 'abc' });
 
@@ -199,7 +199,7 @@ describe('#csrfCrypto', function () {
 		var session = new Session({ key: 'abc', secure: true });
 
 		var res = session.run({ secure: true });
-		var formToken = res.getFormToken();
+		res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.secure, true, "Token cookie should be secure");
 	});
 
@@ -222,7 +222,7 @@ describe('#csrfCrypto', function () {
 		session2.cookies._csrfKey = session1.cookies._csrfKey;
 
 		var req2 = {};
-		var res2 = session2.run(req2);
+		session2.run(req2);
 
 		assert.throws(function () {
 			req2.verifyToken(formToken);
@@ -233,42 +233,42 @@ describe('#csrfCrypto', function () {
 		var session = new Session({ key: 'abc', domain: function (req) { return '.' + req.session.area + '.example.com'; } });
 
 		var res = session.run({ session: { area: 'corp' } });
-		var formToken = res.getFormToken();
+		res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.domain, ".corp.example.com");
 	});
 	it('should use domain string', function () {
 		var session = new Session({ key: 'abc', domain: '.example.com' });
 
 		var res = session.run({});
-		var formToken = res.getFormToken();
+		res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.domain, ".example.com");
 	});
 	it('should ignore allowSubdomains if domain is set', function () {
 		var session = new Session({ key: 'abc', domain: 'example.com', allowSubdomains: true });
 
 		var res = session.run({ host: 'a.example.com' });
-		var formToken = res.getFormToken();
+		res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.domain, "example.com");
 	});
 	it('should handle allowSubdomains', function () {
 		var session = new Session({ key: 'abc', allowSubdomains: true });
 
 		var res = session.run({ host: 'a.example.com' });
-		var formToken = res.getFormToken();
+		res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.domain, ".a.example.com");
 	});
 	it('should ignore allowSubdomains for localhost', function () {
 		var session = new Session({ key: 'abc', allowSubdomains: true });
 
 		var res = session.run({ host: 'localhost' });
-		var formToken = res.getFormToken();
+		res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.domain, void 0);
 	});
 	it('should use default to no domain', function () {
 		var session = new Session({ key: 'abc' });
 
 		var res = session.run({});
-		var formToken = res.getFormToken();
+		res.getFormToken();
 		assert.strictEqual(res.cookieOptions._csrfKey.domain, void 0);
 	});
 
@@ -402,7 +402,6 @@ describe('#csrfCrypto.enforcer', function () {
 });
 describe('#csrfCrypto.guard', function () {
 	function runGuard(res) {
-		var retVal;
 		csrfCrypto.guard()(res.req, res, function () { });
 		res.end();
 	}

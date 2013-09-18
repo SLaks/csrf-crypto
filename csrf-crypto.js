@@ -1,11 +1,11 @@
-﻿/*jshint node: true, camelcase: true, eqeqeq: true, forin: true, immed: true, latedef: true, newcap: true, noarg: true, undef: true, globalstrict: true, laxbreak: true*/
-"use strict";
+﻿"use strict";
+
 var crypto = require('crypto');
 
 var defaultAlgorithm = 'sha512',
 	defaultCookieName = '_csrfKey',
 	saltSize = 20,
-	emptyUserData = function (req) { return ""; };
+	emptyUserData = function () { return ""; };
 
 // These keys are used to transform the caller's master key
 // into two separate keys for the cookie and form tokens.
@@ -32,9 +32,9 @@ module.exports = function csrfCrypto(options) {
 	if (typeof options.cookieName === 'function')
 		cookieName = options.cookieName;
 	else if (options.cookieName)
-		cookieName = function (req) { return options.cookieName; };
+		cookieName = function () { return options.cookieName; };
 	else
-		cookieName = function (req) { return defaultCookieName; };
+		cookieName = function () { return defaultCookieName; };
 
 	var getUserData;
 	if (!options.userData) {
@@ -51,11 +51,11 @@ module.exports = function csrfCrypto(options) {
 	if (typeof options.domain === 'function')
 		cookieDomain = options.domain;
 	else if (options.domain)
-		cookieDomain = function (req) { return options.domain; };
+		cookieDomain = function () { return options.domain; };
 	else if (options.allowSubdomains)
 		cookieDomain = function (req) { return req.host && req.host.indexOf('.') >= 0 ? '.' + req.host : void 0; };	// For security reasons, browsers won't set wildcard cookies on top-level domains, even `localhost`
 	else
-		cookieDomain = function (req) { };
+		cookieDomain = function () { };
 
 	var cookieKey = crypto.createHmac(options.algorithm, options.key).update(cookieKeyKey).digest();
 	var formKey = crypto.createHmac(options.algorithm, options.key).update(formKeyKey).digest();
