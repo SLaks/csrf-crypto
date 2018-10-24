@@ -43,7 +43,7 @@ module.exports = function csrfCrypto(options) {
 		// Since we use '|' to split parts, make sure that the userData
 		// does not contain that character.
 		getUserData = function (req) {
-			return String(options.userData(req)).replace('|', '^');
+			return String(options.userData(req)).replace(/[|]/g, '^');
 		};
 	}
 
