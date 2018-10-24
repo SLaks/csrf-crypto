@@ -22,8 +22,8 @@
     "lint": "jshint csrf-crypto.js"
   },
   "devDependencies": {
-    "mocha": "~1.7.3",
-    "jshint": "~0.9.1",
-    "connect": "~2.7.1"
+    "mocha": "~5.2.0",
+    "jshint": "~2.9.6",
+    "connect": "~3.6.6"
   }
 }
