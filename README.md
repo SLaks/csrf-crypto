@@ -1,4 +1,4 @@
-#csrf-crypto
+# csrf-crypto
 [![build status](https://secure.travis-ci.org/SLaks/csrf-crypto.png)](http://travis-ci.org/SLaks/csrf-crypto)
 
 csrf-crypto implements CSRF protection without using server-side session, just like ASP.Net's [AntiForgery class](http://msdn.microsoft.com/en-us/library/system.web.helpers.antiforgery.aspx).
@@ -8,7 +8,7 @@ It still prevents attackers from generating valid form tokens even if they can r
 
 To do this, it utilizes a secret key that is shared by all of the servers.
 
-##Replacing Connect's CSRF
+## Replacing Connect's CSRF
 **Unlike the connect's built-in csrf module, you must verify the tokens in csrf-crypto explicitly in each POST request.**  
 Alternatively, you can use the optional csrfCrypto.enforcer() middleware to make it behave exactly like `csrf`:
 
@@ -19,7 +19,7 @@ expressApp.use(csrfCrypto.enforcer());
 
 You will still need to replace `req.session._csrf` with `res.getFormToken()`.
 
-#Usage
+# Usage
 
 First, install the middleware:
 
@@ -46,11 +46,11 @@ if (!req.verifyToken(req.body._csrf)) {
 To force the cookie to be regenerated, call `res.resetCsrf()` before calling `getFormToken()`.  This method will remove the current cookie and clear any cached validity information.  
 This method should be called in conjunction with the `userData()` option to regenerate the cookie of the user changes (eg, after logging in).
 
-#Helper Middleware
+# Helper Middleware
 
 If you don't want to manually verify the token in every POST, you have two options:
 
-###`csrfCrypto.enforcer()`
+### `csrfCrypto.enforcer()`
 This middleware will verify the CSRF token for all incoming POST (or PUT, or anything except GET, HEAD, and OPTIONS) requests, just like the standard [csrf middleware](http://www.senchalabs.org/connect/csrf.html).  Like the standard middleware, it will look for the form token in a `_csrf` field in the body or querystring, or in the `X-CSRF-Token` header field.  If the token is missing or invalid, it will send an HTTP 403 error.
 
 An earlier middleware can call `req.allowCsrf();` to suppress the verification.
@@ -61,7 +61,7 @@ expressApp.use(csrfCrypto({ key: secret }));
 expressApp.use(csrfCrypto.enforcer());
 ```
 
-###`csrfCrypto.guard()`
+### `csrfCrypto.guard()`
 This middleware will make sure that you don't forget to verify any non-GET (nor HEAD, nor OPTIONS) requests against CSRF.
 
 If neither `req.verifyToken()` nor `req.allowCsrf()` has been called on such a request, `res.end()` will throw an exception.
@@ -71,7 +71,7 @@ This middleware does not verify that the result of `req.verifyToken()` has been 
 This middleware takes no options and must be included before any middleware that might end the request.  (it does not need to be after csrfCrypto)
 
 
-#Options
+# Options
 The csrfCrypto middleware function takes an options hash with the following options.  
 All options except `key` are optional.
 
@@ -85,7 +85,7 @@ For example, this can be used to make different groups of SSL-wildcarded subdoma
  - `domain`: Specifies the CSRF cookies' `domain` header.  This can be a string, or a function that takes the `req` and returns a string.  If a function is specified, it will be invoked (with no `this`) whenever the CSRF cookie is created or deleted.
  - `allowSubdomains`: If true, CSRF cookies will be set on <code>.<i>example.com</i></code> (where `example.com` is the HTTP `Host` header, minus the port number), allowing them to be inherited by subdomains.  Use with caution; this allows attackers who control any subdomain of your domain name to steal users' tokens.   This option has no effect on localhost, or if `domain` is set.
 
-#Security Guarantees
+# Security Guarantees
 As long as the server-side key is kept secret, an attacker will not be able to derive a valid form token from an existing cookie token.
 
 An attacker with write access to the victim's cookies will be able to get a form/cookie token pair directly from the server, and replace the victim's CSRF cookie with the attacker's.
@@ -94,3 +94,6 @@ This risk can be mitigated by providing a `userData()` function.  This will caus
 
 If the server-side key is exposed, an attacker with read access to the victim's cookies will be able to use the key to generate a valid form token from the cookie token.  
 Exposing the server-side key will still maintain defense against attackers without any cookie read access.
+
+# License
+MIT
