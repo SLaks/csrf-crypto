@@ -11,6 +11,7 @@
     "connect",
     "middleware"
   ],
+  "engines" : { "node" : ">=5.10" },
   "main": "csrf-crypto.js",
   "repository": {
     "type": "git",

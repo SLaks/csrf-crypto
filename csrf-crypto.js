@@ -9,12 +9,12 @@ var defaultAlgorithm = 'sha512',
 
 // These keys are used to transform the caller's master key
 // into two separate keys for the cookie and form tokens.
-var cookieKeyKey = new Buffer('55db309354097fca60732bf300f04e1880b285dcd506437c052e13d33313ada04c43f6cb613ae2a38affc693b4fbce3df7521eaf5ba200a2c95693f64f343fc5', 'hex');
-var formKeyKey = new Buffer('6a23031b0b18777157cabf8aed626e298720115c2dbf4b73af790cda42fb4bdb2afd3d1909526b519c2bd5ccded109ddb0caef43b743329c6df2bb8ef49bec08', 'hex');
+var cookieKeyKey = Buffer.from('55db309354097fca60732bf300f04e1880b285dcd506437c052e13d33313ada04c43f6cb613ae2a38affc693b4fbce3df7521eaf5ba200a2c95693f64f343fc5', 'hex');
+var formKeyKey = Buffer.from('6a23031b0b18777157cabf8aed626e298720115c2dbf4b73af790cda42fb4bdb2afd3d1909526b519c2bd5ccded109ddb0caef43b743329c6df2bb8ef49bec08', 'hex');
 
 function base64Random(numBytes) {
 	var bytes = crypto.randomBytes(numBytes);
-	return new Buffer(bytes, 'binary').toString('base64');
+	return Buffer.from(bytes, 'binary').toString('base64');
 }
 
 function allowCsrf() {
