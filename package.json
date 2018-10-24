@@ -1,6 +1,6 @@
 {
   "name": "csrf-crypto",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Connect middleware for session-less CSRF protection using cryptography.",
   "homepage": "https://github.com/SLaks/csrf-crypto",
   "author": "Schabse Laks <Dev@SLaks.net> (http://slaks.net)",
@@ -11,7 +11,9 @@
     "connect",
     "middleware"
   ],
-  "engines" : { "node" : ">=5.10" },
+  "engines": {
+    "node": ">=5.10"
+  },
   "main": "csrf-crypto.js",
   "repository": {
     "type": "git",
