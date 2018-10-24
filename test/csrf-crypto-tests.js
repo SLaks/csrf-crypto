@@ -157,10 +157,10 @@ describe('#csrfCrypto', function () {
 	it('should work with users', function () {
 		var session = new Session({ key: 'abc', userData: getUser });
 
-		var res1 = session.run({ user: "2|SLaks" });
+		var res1 = session.run({ user: "2|SLaks|:)" });
 		var formToken = res1.getFormToken();
 
-		var req2 = { user: "2|SLaks" };
+		var req2 = { user: "2|SLaks|:)" };
 		session.run(req2);
 		assert.ok(req2.verifyToken(formToken));
 	});
